@@ -1,17 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Dating Website</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FindMatch — Dating</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      text-align: center; 
-      padding-top: 50px;
-    }
+    :root{--accent:#ff5a7a;--muted:#7b7b7b;--card:#111;--bg:#0b0b0b}
+    body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:#eee}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid #111}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#ff8aa3,#ff5a7a);display:flex;align-items:center;justify-content:center;font-weight:700;color:#111}
+    .title{font-size:20px;font-weight:600}
+    nav .btn{background:transparent;border:1px solid #222;color:#ddd;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .container{max-width:1100px;margin:28px auto;padding:0 18px}
+    .hero{display:flex;gap:18px;align-items:center}
+    .search{background:#0f0f0f;padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.6);flex:1}
+    .search-row{display:flex;gap:10px;align-items:center}
+    input, select{background:#0b0b0b;border:1px solid #222;padding:10px;border-radius:8px;color:#ddd;outline:none}
+    .profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:20px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid #1a1a1a;padding:12px;border-radius:12px;overflow:hidden}
+    .avatar{width:100%;height:260px;background:#222;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#ccc}
+    .name{font-weight:700;margin-bottom:6px}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:10px}
+    .actions{display:flex;gap:8px}
+    .like{background:var(--accent);color:#111;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .view{background:transparent;border:1px solid #222;color:#ddd;padding:8px 12px;border-radius:8px;cursor:pointer}
+    footer{margin:40px 0;text-align:center;color:var(--muted)}
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(2,2,2,0.66);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal.open{display:flex}
+    .modal-card{background:#070707;border-radius:12px;max-width:760px;width:100%;padding:18px;border:1px solid #222}
+    .modal-top{display:flex;gap:12px}
+    .modal-avatar{width:200px;height:200px;background:#151515;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#ccc}
+    .modal-info{flex:1}
+    .close{background:transparent;border:1px solid #222;padding:8px 10px;border-radius:8px;color:#ddd;cursor:pointer}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{border:1px solid #222;padding:6px 8px;border-radius:8px;color:var(--muted);font-size:13px}
+    @media(max-width:720px){.hero{flex-direction:column}.modal-top{flex-direction:column}.modal-avatar{width:100%;height:220px}}
   </style>
 </head>
 <body>
-  <h1>Welcome to your new dating site!</h1>
-  <p>We will build login, profiles, chat and everything step by step.</p>
+
+  <header>
+    <div class="brand">
+      <div class="logo">FM</div>
+      <div>
+        <div class="title">FindMatch</div>
+        <div style="font-size:12px;color:var(--muted)">Free dating — test mode</div>
+      </div>
+    </div>
+
+    <nav>
+      <button class="btn" onclick="alert('Login will be added in Step 6')">Login / Sign up</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="search">
+        <div style="font-weight:700;margin-bottom:10px">Search people</div>
+        <div class="search-row">
+          <input id="txtName" placeholder="Name or keyword" />
+          <select id="selGender">
+            <option value="any">Any gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          <select id="selAge">
+            <option value="any">Any age</option>
+            <option value="18-24">18–24</option>
+            <option value="25-34">25–34</option>
+            <option value="35-50">35–50</option>
+          </select>
+          <button class="like" onclick="applyFilters()">Search</button>
+        </div>
+        <div style="margin-top:10px;color:var(--muted);font-size:13px">This is a demo UI. Real login & messaging will be connected to Firebase in the next steps.</div>
+      </div>
+    </section>
+
+    <section class="profiles" id="profiles">
+      <!-- profile cards inserted by JS -->
+    </section>
+
+    <footer>
+      <div>Made with ❤️ — FindMatch Demo</div>
+    </footer>
+  </main>
+
+  <!-- modal -->
+  <div id="modal" class="modal" onclick="closeModal(event)">
+    <div class="modal-card" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700">Profile</div>
+        <button class="close" onclick="closeModal()">Close</button>
+      </div>
+      <div class="modal-top" style="margin-top:12px">
+        <div class="modal-avatar" id="mAvatar">A</div>
+        <div class="modal-info">
+          <div id="mName" style="font-size:20px;font-weight:700"></div>
+          <div id="mMeta" class="meta"></div>
+          <div id="mBio" style="margin-top:10px;color:#ddd"></div>
+          <div class="tags" id="mTags"></div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="like" onclick="likeCurrent()">Like</button>
+            <button class="view" onclick="messageCurrent()">Message</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Demo profiles (static). We'll replace with Firebase data in Step 6.
+    const profiles = [
+      {id:1,name:'Nadia',age:26,gender:'female',city:'Bangkok, TH',bio:'Love travel, karaoke and street food.',tags:['Travel','Singing','Food'],avatarText:'N'},
+      {id:2,name:'Alex',age:28,gender:'male',city:'Moscow, RU',bio:'Coffee nerd, gamer and photographer.',tags:['Games','Photo','Coffee'],avatarText:'A'},
+      {id:3,name:'Ploy',age:24,gender:'female',city:'Chiang Mai, TH',bio:'Artist. Looking for meaningful conversations.',tags:['Art','Chat','Nature'],avatarText:'P'},
+      {id:4,name:'Viktor',age:32,gender:'male',city:'Saint Petersburg, RU',bio:'Engineer, loves hiking and cooking.',tags:['Hiking','Cooking'],avatarText:'V'},
+      {id:5,name:'Mai',age:30,gender:'female',city:'Phuket, TH',bio:'DJ and music lover. Let\'s sing together!',tags:['Music','DJ','Singing'],avatarText:'M'},
+      {id:6,name:'Sam',age:27,gender:'other',city:'Bangkok, TH',bio:'Open-minded and fun. Coffee or tea?',tags:['Coffee','Travel'],avatarText:'S'},
+    ];
+
+    let current = null;
+
+    function renderProfiles(list){
+      const container = document.getElementById('profiles');
+      container.innerHTML = '';
+      if(!list.length) {
+        container.innerHTML = '<div style="color:var(--muted);padding:20px">No results — try different filters.</div>';
+        return;
+      }
+      list.forEach(p=>{
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <div class="avatar">${p.avatarText}</div>
+          <div class="name">${p.name}, ${p.age}</div>
+          <div class="meta">${p.gender} · ${p.city}</div>
+          <div style="font-size:14px;color:#ddd;margin-bottom:10px">${p.bio}</div>
+          <div class="actions">
+            <button class="view" onclick="openProfile(${p.id})">View</button>
+            <button class="like" onclick="likeProfile(${p.id})">Like</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function applyFilters(){
+      const name = document.getElementById('txtName').value.toLowerCase().trim();
+      const gender = document.getElementById('selGender').value;
+      const age = document.getElementById('selAge').value;
+      const filtered = profiles.filter(p=>{
+        if(gender !== 'any' && p.gender !== gender) return false;
+        if(age !== 'any'){
+          const [low,high] = age.split('-').map(Number);
+          if(!(p.age >= low && p.age <= high)) return false;
+        }
+        if(name && !(p.name.toLowerCase().includes(name) || p.bio.toLowerCase().includes(name))) return false;
+        return true;
+      });
+      renderProfiles(filtered);
+    }
+
+    function openProfile(id){
+      current = profiles.find(p=>p.id===id);
+      if(!current) return;
+      document.getElementById('mAvatar').textContent = current.avatarText;
+      document.getElementById('mName').textContent = `${current.name}, ${current.age}`;
+      document.getElementById('mMeta').textContent = `${current.gender} · ${current.city}`;
+      document.getElementById('mBio').textContent = current.bio;
+      const tags = document.getElementById('mTags'); tags.innerHTML='';
+      current.tags.forEach(t=>{ const el=document.createElement('div'); el.className='tag'; el.textContent=t; tags.appendChild(el); });
+      document.getElementById('modal').classList.add('open');
+    }
+
+    function closeModal(e){
+      if(e && e.target && e.target.classList && e.target.classList.contains('modal')) {
+        document.getElementById('modal').classList.remove('open');
+      } else {
+        document.getElementById('modal').classList.remove('open');
+      }
+    }
+
+    function likeProfile(id){
+      const p = profiles.find(x=>x.id===id);
+      alert('You liked ' + p.name + '. (Demo action)');
+    }
+    function likeCurrent(){ if(current) alert('You liked ' + current.name + ' (Demo)'); }
+    function messageCurrent(){ if(current) alert('Message window will open after we add chat (next step)'); }
+
+    // initial render
+    renderProfiles(profiles);
+  </script>
 </body>
 </html>
